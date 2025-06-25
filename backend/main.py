@@ -34,6 +34,7 @@ def create_or_get_user(user: schemas.UserCreate, db: Session = Depends(database.
     logger.info(f"User '{user.username}' created.")
     return new_user
 
+
 @app.post("/game/start", response_model=schemas.GameStartResponse)
 def start_game(user_id: int, db: Session = Depends(database.get_db)):
     user = crud.get_user_by_id(db, user_id)
@@ -43,7 +44,8 @@ def start_game(user_id: int, db: Session = Depends(database.get_db)):
     number = random.randint(0, 1000)
     new_game = crud.create_game(db, user_id, number)
     logger.info(f"Game {new_game.id} started for user {user_id} with number {number}.")
-    return schemas.GameStartResponse(game_id=new_game.id, number=number)
+    return schemas.GameStartResponse(game_id=new_game.id, number=number)  # type: ignore
+
 
 @app.post("/game/guess", response_model=schemas.GuessResponse)
 def make_guess(guess_req: schemas.GuessRequest, db: Session = Depends(database.get_db)):
@@ -53,18 +55,24 @@ def make_guess(guess_req: schemas.GuessRequest, db: Session = Depends(database.g
         raise HTTPException(status_code=404, detail="Game not found")
     if game.current_number is None:
         logger.info(f"Game {guess_req.game_id} already finished.")
-        return schemas.GuessResponse(correct=False, score=game.score)
+        return schemas.GuessResponse(correct=False, score=game.score)  # type: ignore
+    
     current_number = game.current_number
     new_number = random.randint(0, 1000)
-    correct = ((guess_req.guess == 'higher' and new_number > current_number) or
-               (guess_req.guess == 'lower' and new_number < current_number))
-    game = crud.update_game_after_guess(db, game, correct, new_number if correct else None)
-    if correct:
+    
+    # Evaluate the guess
+    is_higher = new_number > current_number
+    is_lower = new_number < current_number
+    correct = (guess_req.guess == 'higher' and is_higher) or (guess_req.guess == 'lower' and is_lower)  # type: ignore
+    
+    game = crud.update_game_after_guess(db, game, correct, new_number if correct else None)  # type: ignore
+    if correct:  # type: ignore
         logger.info(f"Game {guess_req.game_id}: correct guess ({guess_req.guess}), new number {new_number}, score {game.score}.")
         return schemas.GuessResponse(correct=True, new_number=new_number)
     else:
         logger.info(f"Game {guess_req.game_id}: wrong guess ({guess_req.guess}), game over. Final score: {game.score}")
-        return schemas.GuessResponse(correct=False, score=game.score)
+        return schemas.GuessResponse(correct=False, score=game.score)  # type: ignore
+
 
 @app.get("/statistics/{user_id}", response_model=schemas.StatisticsOut)
 def get_statistics(user_id: int, db: Session = Depends(database.get_db)):
@@ -75,6 +83,7 @@ def get_statistics(user_id: int, db: Session = Depends(database.get_db)):
     stats = crud.get_user_statistics(db, user_id)
     logger.info(f"Statistics for user {user_id}: total_games={stats['total_games']}, longest_streak={stats['longest_streak']}")
     return schemas.StatisticsOut(**stats)
+
 
 @app.delete("/statistics/{user_id}", response_model=schemas.ClearStatisticsResponse)
 def clear_statistics(user_id: int, db: Session = Depends(database.get_db)):

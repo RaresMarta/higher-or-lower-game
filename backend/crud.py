@@ -29,8 +29,8 @@ def create_game(db: Session, user_id: int, number: int):
 def get_game_by_id(db: Session, game_id: int):
     return db.query(models.Game).filter(models.Game.id == game_id).first()
 
-def update_game_after_guess(db: Session, game, correct: bool, new_number: int = None):
-    if correct:
+def update_game_after_guess(db: Session, game, correct: bool, new_number: int | None = None):
+    if correct and new_number is not None:
         game.score += 1
         game.current_number = new_number
     else:
@@ -44,7 +44,8 @@ def update_game_after_guess(db: Session, game, correct: bool, new_number: int = 
 def get_user_statistics(db: Session, user_id: int):
     games = db.query(models.Game).filter(models.Game.user_id == user_id).all()
     total_games = len(games)
-    longest_streak = max((g.score for g in games), default=0)
+    scores = [game.score if game.score is not None else 0 for game in games]
+    longest_streak = max(scores, default=0)  # type: ignore
     return {"total_games": total_games, "longest_streak": longest_streak}
 
 def clear_user_statistics(db: Session, user_id: int):
