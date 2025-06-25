@@ -23,7 +23,7 @@ Welcome to the **Higher or Lower Game**! This is a single-player web game where 
 ### 1. Clone the repository
 ```sh
 git clone https://github.com/RaresMarta/higher-or-lower-game
-cd YOUR_REPO
+cd higher-or-lower-game
 ```
 
 ### 2. Backend Setup (FastAPI)
@@ -59,12 +59,3 @@ npm run dev
 5. View or clear your statistics anytime.
 6. Logout to switch users.
 
----
-
-## 📸 Screenshots
-> _Add your own screenshots here!_
-
----
-
-## 🤝 Contributing
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
